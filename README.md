@@ -4,5 +4,8 @@ A peg solitaire app for the english board with a winning indicator (indicates if
 * indicator green: you can still win
 * indicator red: you can not win
 
+## Screenshot
+![Screenshot](screenshot.png)
+
 
 
