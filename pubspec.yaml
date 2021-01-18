@@ -1,0 +1,45 @@
+name: pegsolitaire
+description: Simple peg solitaire game
+
+version: 0.3.0
+
+environment:
+  sdk: ">=2.1.0 <3.0.0"
+
+dependencies:
+  quiver: ^2.1.5
+  archive: ^2.0.13
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  shared_preferences: ^0.5.12
+  cupertino_icons: ^1.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/hole.png
+    - assets/unused.png
+    - assets/english_board_winning_positions.txt
+    - assets/peg_blue.png
+    - assets/peg_blue_highlighted.png
+    - assets/peg_grey.png
+    - assets/peg_grey_highlighted.png
+    - assets/peg_green.png
+    - assets/peg_green_highlighted.png
+    - assets/peg_red.png
+    - assets/peg_red_highlighted.png
+    - assets/peg_orange.png
+    - assets/peg_orange_highlighted.png
+    - assets/peg_yellow.png
+    - assets/peg_yellow_highlighted.png
+
+  fonts:
+    - family:  EasyPegSolitaireIcons
+      fonts:
+        - asset: assets/fonts/EasyPegSolitaireIcons.ttf
