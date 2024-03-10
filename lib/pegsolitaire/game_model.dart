@@ -1,25 +1,28 @@
-library pegsolitaire_model;
+library game_model;
 
-import 'package:flutter/services.dart';
-import 'package:pegsolitaire/pegsolitaire_board.dart';
+import 'package:flutter/material.dart';
+import 'package:pegsolitaire/pegsolitaire/english_board.dart';
+
+import 'location.dart';
+import 'location_content.dart';
 
 /// Model for a peg solitaire game which holds data like the board, move history, current position.
 /// Used by the game presenter and view.
-class PegSolitaireModel {
-  final EnglishBoard board = new EnglishBoard();
-  List<String> positionHistory = new List<String>();
+class GameModel extends ChangeNotifier {
+  final EnglishBoard board = EnglishBoard();
+  List<String> positionHistory = [];
   int move = -1;
-  String currentPosition;
-  Location selectedPegLocation;
-  List<Set<String>> winningPositions = new List<Set<String>>();
+  String? currentPosition;
+  Location? selectedPegLocation;
+  List<Set<String>> winningPositions = [];
   bool lost = false;
   int numUndos = 0; // how many times a move has been undone
   int maxNumUndos = 3; // max number of times a user can undo a move
-  String pegColor;
-  String bestGamePegsRemaining;
+  String pegColor = 'blue';
+  String? bestGamePegsRemaining;
 
-  PegSolitaireModel() {
-    addMove(EnglishBoard.START_POSITION);
+  GameModel() {
+    addMove(EnglishBoard.startPosition);
   }
 
   void reset() {
@@ -29,13 +32,15 @@ class PegSolitaireModel {
     selectedPegLocation = null;
     lost = false;
     numUndos = 0;
-    addMove(EnglishBoard.START_POSITION);
+    addMove(EnglishBoard.startPosition);
+    notifyListeners();
   }
 
   void addMove(String position) {
     move = move + 1;
     currentPosition = position;
     positionHistory.add(position);
+    notifyListeners();
   }
 
   void deleteMove() {
@@ -47,23 +52,28 @@ class PegSolitaireModel {
     currentPosition = positionHistory[move];
     positionHistory.removeLast();
     selectedPegLocation = null;
-    lost = !isInWinningPositions(currentPosition);
+    if (currentPosition == null) {
+      lost = false;
+    } else {
+      lost = !isInWinningPositions(currentPosition!);
+    }
+    notifyListeners();
   }
 
-  BoardContent getContent(int row, int column) {
-    return board.getContent(currentPosition, row, column);
+  LocationContent getContentAtLocation(int row, int column) {
+    assert(currentPosition != null);
+    return board.getContentAtLocation(currentPosition!, row, column);
   }
 
-  String findBoardPositionAfterMove(Location start, Location end) {
-    return board.getConsecutivePosition(currentPosition, start, end);
+  String? findBoardPositionAfterMove(Location start, Location end) {
+    assert(currentPosition != null);
+    return board.findConsecutivePosition(currentPosition!, start, end);
   }
 
   bool isInWinningPositions(String newPosition) {
     Set<String> symmetricPositions = board.getSymmetricPositions(newPosition);
     Set<String> currentWinningPositions = winningPositions[move];
-    return currentWinningPositions
-        .intersection(symmetricPositions)
-        .isNotEmpty;
+    return currentWinningPositions.intersection(symmetricPositions).isNotEmpty;
   }
 
   bool isUndoAllowed() {
@@ -71,30 +81,29 @@ class PegSolitaireModel {
   }
 
   bool isGameFinished() {
-    return board
-        .getMoves(currentPosition)
-        .isEmpty;
+    assert(currentPosition != null);
+    return board.getMoves(currentPosition!).isEmpty;
   }
 
   void readWinningPositions(AssetBundle rootBundle) {
     // read winning positions. We do not use a zipped file because decoding would slow down start up.
     // the packing of the apk is good enough to shrink the size.
     // there is only one string in the file (line endings are ignored)
-    Stopwatch stopwatch = new Stopwatch()
-      ..start();
+    Stopwatch stopwatch = Stopwatch()..start();
     rootBundle.loadString('assets/english_board_winning_positions.txt').asStream().forEach((fileContent) {
       winningPositions = fileContent
-          .split('\r\n') // split lines
+          .split('\n') // split lines
           .where((line) => line.isNotEmpty) // skip empty lines
           .toList() //
           .map((line) {
         return line
             .split(',') // split numbers in one line
-            .where((num) => num.isNotEmpty) // remove empty numbers
+            .where((String num) => num.isNotEmpty) // remove empty numbers
             .toSet();
       }).toList();
-      print('${winningPositions.length} winning positions loaded in ${stopwatch.elapsed}');
+      debugPrint('${winningPositions.length} winning positions loaded in ${stopwatch.elapsed}');
     });
+    notifyListeners();
   }
 
   int getNumUndosLeft() {
@@ -106,5 +115,9 @@ class PegSolitaireModel {
 
   int getPegsRemaining() {
     return (32 - move);
+  }
+
+  void notify() {
+    notifyListeners();
   }
 }
